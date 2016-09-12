@@ -1,13 +1,179 @@
-Version: 1.0
+---
+title: "Exploration 3. rdm"
+author: "HyoWon, Rebeca, Sarah"
+date: "2016년 9월 12일"
+output: html_document
+---
+EXPLORATION 3 
+HyoWon, Rebeca, Sarah 
 
-RestoreWorkspace: Default
-SaveWorkspace: Default
-AlwaysSaveHistory: Default
+Introduction 
 
-EnableCodeIndexing: Yes
-UseSpacesForTab: Yes
-NumSpacesForTab: 2
-Encoding: UTF-8
+Our friend has once again approached us with questions regarding her project at the UK office. This time she needs help determining the relationship between age and support for Trump, and whether it is non-linear or linear relationship. 
 
-RnwWeave: knitr
-LaTeX: XeLaTeX
+```{r setup, include=FALSE}
+download.file("http://jakebowers.org/Data/ANES/anes_pilot_2016_csv.zip",destfile="anespilot2016.csv.zip")
+unzip("anespilot2016.csv.zip")
+anespi16<-read.csv("anes_pilot_2016.csv",as.is=TRUE,strip.white=TRUE)
+```
+
+From the data provided by our friend, we first decided on the variables to represent the factors ‘age’ and ‘support for Trump’. For age, we took ‘birthyr’ to represent how old each surveyed individual was, the oldest participant being born in 1921 and youngest in 1997.  For ‘support for Trump,’ we took the ‘fttrump’ variable, which is a scale of 0 to100 on how one feels about Trump, where 0 is least supportive of Trump and 100 is most supportive. 
+
+```{r}
+summary(anespi16$fttrump)
+summary(anespi16$birthyr)
+```
+
+Looking over the summary, we initially hypothesized that the later your birth year (the younger you are), the more your fttrump score for Trump will decrease (less support for Trump). 
+
+Before we go on to plot and analyze the data, we will first answer our friend’s question regarding linear and non-linear regressions.  
+
+Linear vs non-linear regression
+
+Our friend asks here, the importance of a non-linear relationship and why a linear relationship does not suffice. So far, we have been dealing with linear regression models, which assumes that there is a straight-line relationship between the predictors and the response. However, there will be times where linear regression model would be inappropriate in describing the relationship of a certain data set. For example, graphing all the data points of age and support for the Trump may not turn out to be a simple linear graph. Rather, it may take the shape of a parabola as the younger and older age cohort signal stronger support for Trump whereas those in their 20s and 30s may not be as supportive as the rest. In this case, the best fitted line would have more than one coefficient than just one in a linear regression. Therefore, non-linear regression models are able to explain relationships that linear regressions are not capable of doing so. 
+
+As a result, non-linear regression would be useful for making good estimates for parameters of an unknown. Where as the parameters are linear, constraining the equation to one basic form, the nonlinear equation can take many different forms. In fact, there is an infinite number of forms the non-linear regression can take. While the linear regression model may be easier to visualize and analyze, due to the limitation in equation and form the linear regression model can take, it is disadvantaged when having to deal with outliers/extremes. While the non-linear regression model has the freedom to take fit into the given data, the linear regression will have a difficult time increasing or decreasing at declining/inclining rate as the explanatory variables go its extreme. 
+
+Although linear and non-linear regressions both minimize the sum of squares of the residual error (SSE), procedures used to do this are different. We will now take a look at the various ways to minimize the sum of squares of the residual error (SSE). 
+
+Smooth vs abrupt/discontinuous, local vs. global
+
+Our friend asked us for some specific types of data analysis, including a global non-linear smoothed model, a global linear smoothed model, and 2 local non-linear smoothed models. Before choosing the functions that we will use in R, we first need to understand what “smoothed” means, and what the difference is between “local” and “global”. 
+
+The basic idea behind “smoothing” a regression is that it will make the results more uniform and sensible, and avoid any discontinuity. When it comes to regression analysis, there is a multitude of ways in which the data and the analysis of it can be handled. For example, while a simple linear regression will produce a single line with a steady slope, a polynomial regression can reflect a changing relationship between variables via its changing slope. A step function can actually divide the data into sections, and execute regression analysis on each portion of the data. However, whle dividing data analysis into parts via steps or knots or degrees of freedom, you run the risk of producing abrupt, or discontinuous, results. Discontinuity might mean, for example, that your predicted values of your dependent variable might jump from 1000 to 1 with a single unit change in your independent variable. Such a leap can be considered as “discontinuous” and produce abrupt results, and likely does not reflect the reality of the data. “Smoothing” the regression means taking away this discontinuity, and making sure that your results are instead “continuous”. 
+
+It is important to note the trade-off that comes with smoothing your regression. If smoothing a regression makes it more continuous, then we might consider a basic linear function to be perfectly smooth - it never changes coefficients abruptly, or at all. However, complete smoothness also means that you are sacrificing a better fit of your regression line. You need to be aware when running regressions as to how “smooth” or how good of a “fit” you are producing with your analysis. In our case, with Trump support, we must ask ourselves how smooth we want our answers to look: we can provide a very smooth result with perhaps more inaccuracy at specific data points, or we can produce a more discontinuous result that will better directly reflect each individual data point used in analysis.
+
+The second parameter of regression to understand is global versus local regression. Again considering this from a simplistic point of view to begin, global and local refer to the equation or functions used to calculate values for your dependent variable. In doing regression analysis, you (or your computer) are constructing and using a mathematical formula that can be visually expressed as a line. In a global regression, the formula used is used “globally”, as in the same formula is used for all of the data points. This assumes to some degree that the relationship between your two main variables is unchanging, and can be found in the same way at any point. Local regression, on the other hand, starts with the assumption that the relationship between your two variables may change for some reason. In the case of Trump support, perhaps younger and older people consider different factors when determining their support levels for Trump. A local regression will then produce multiple mathematical functions in the process of regression, applying a different formula to each section of data. The size of these sections can be determined either mathematically or can be chosen separaetly from the calculations.
+
+List regressions with description (pros&cons)
+
+For every regression that we run, we check the fit of the model by calculating the sum of squared residuals. Doing so will allow us to choose the best model for recommendation, as we will be choosing the one with the best fit. For every regression model, we will designate the fttrump variable as less than or equal to 100, in order to eliminate the three outliers (value of 988). 
+
+We would like to note before going into our explanation that we are confident we’ve gotten something wrong here. There was a lot of confusion among all students in the class as to how to define global vs. local, and smoothed vs. abrupt. We are sure that some of our choices of what type of regression to use, and what classification we shoul give them, are mixed up, and plan to discuss that in class. In addition, we had a very hard time figuring out how to summarize the results of the more complex regressions, and how to interpret them. Again, we would like to discuss this all in class.
+
+Basic linear 
+
+Let us begin with a basic linear model. The basic linear regression is a statistical procedure used to predict that value of a dependent variable from an independent variable when the variables can be described in a linear model. 
+
+The simple linear regression is a very straightforward approach for predicting the quantitative response Y on the basis of a single predictor variable X. It assumes that there is approximately a linear relationship between X and Y.  Here we run the simple linear regression model to whether it is a good fit to explain the relationship between age and fttrump.
+
+```{r}
+basiclinear <- lm(fttrump ~ birthyr, data = anespi16, subset = fttrump <= 100)
+coef(basiclinear)
+```
+
+```{r}
+# Now we graph the data and the first simple regression that we ran: 
+with(subset(anespi16, fttrump <= 100), plot(birthyr, fttrump))
+abline(lm(fttrump ~ birthyr, data = anespi16, subset = fttrump <= 100))
+```
+
+```{r}
+# In order to see if this is a good fit or not, we check the sum of residual: 
+sum(basiclinear$residuals^2)
+```
+
+When fitting a linear regression model to a particular data set, many problems may occur. First of all, the linear regression model assumes that there is a straight line relationship between the predictors and response. However, if the true relationship is far from linear, the conclusions we may reach from the model are spsect. Also the prediction accurcy of the model can be significantly reduced. Secondly, the linear regression model assumes that the error terms are uncorrelated. This means that in cases where error terms are correlated, the estimated standard errors will underestimate the true standard errors. As a result, the confidence and prediction intervals will be narrower than they should be. Thirdly, the linear regression model assumes that the error terms have constant variance. The standard errors, confidence intervals and hypothesis tests associated with the linear model rely on this assumption. However, it has been the case that variances of the error terms are not always non-constance. There may be cases where variances in error terms increase with the value of the response. In addition, as aforementioned, as the linear regression model takes a simple function, it may not be able to address or deal with outliers in the data frame. It may either take it into consideration, totally distorting the results or may completely ignore it, which again may bring out distorted outcomes. Lastly, the basic linear regression model is disadvantaged in that it has difficulty separating individual effects of collinear variables in the response. If unable to distinguish the collinear variables, it will reduce the accuracy of the estimates of the regression coefficients causing the standard error to grow. 
+
+Global linear smoothed (we’ve just learned that our basic linear regression fits in this category…)
+
+For our global linear smoothed solution, we chose the linear spline regression –a type of piecewise polynomial regression, which means it fits low-degree polynomials over different regions of X (birthyr) instead of high-degree polynomials over the entire range. The linear spline “is obtained by fitting a line in each region of the predictor space defined by the knots, requiring continuity at each knot.” (James et. al.) How do we choose the number and location of the knows? One mechanism consists of looking at how coefficients vary across regions, placing more knots in regions where coefficients change rapidly (and thus increasing flexibility), and less in regions that are more stable. However, knots are usually placed in a uniform fashion, specifying the desired degrees of freedom and letting the software (R) place the corresponding number of knots at uniform quantiles of the data.
+One con of this approach is that splines can have “high variance at the outer range of the predictors” because X can take either a very small or a very large value. (This problem is addressed by the natural spline regression, which imposes additional boundary constraints).
+On the pro side, regression splines have two main advantages over polynomial regressions. First, regression splines often give superior results because they introduce flexibility by increasing the number of knots and keeping the degree fixed, while polynomials must use a high degree exponent to produce flexible fits. (This can cause lines to show “wild” behavior, especially near the tails). Thus, regression splines are more stable. The second advantage is that splines allow us to place more knots over regions where the function seems to change rapidly, and fewer where it seems more stable, adding more flexibility only to the regions that need it the most.
+
+Using a global linear smoothed model, we will run a linear spline regression:
+```{r}
+install.packages("splines", repos = "http://cron.rstudio.com")
+library(splines)
+# knots are chosen from the quartiles of birthyr data (from data summary done previously)
+globalLinear <- lm(fttrump ~ bs(birthyr, knots = c(1955, 1968, 1982)), data = anespi16, subset = fttrump <= 100)
+coef(globalLinear)
+# Checking sum of squared residuals for fit of line
+sum(globalLinear$residual^2)
+```
+
+Global non-linear smoothed 
+
+Four our non-linear smoothed solution, we chose a non-linear smoothed spline regression. Smoothing splines produce a natural cubic spline, but not the same one we get using basis functions (it is a shrunken version). While regression splines are created by specifying a set of knots, producing a sequence of basis functions, and then using least squares to estimate the spline coefficients, smoothing splines fit a smooth curve to a set of data by finding a function that fits the observed data “well”, which means having a small residual sum of squares (RSS). But achieving a small RSS does not guarantee that the line will be smooth; if we were to make RSS zero, we would overfit the data, the spline would be too flexible. The smoothing spline is not only a function that minimizes RSS, but also a function that is smooth. Thus, it needs two components: a “loss function” to encourage the good fit of the data, and a “penalty term” to penalize variability.
+Smoothing splines have knots at every unique value of X (thus we do not need to select the number or location). The problem is we do have to choose the value of the smoothing parameter, but this can be solved using the leave-one-out cross-validation error (LOOSV). Despite all of these knots, the spline does not end up having “too many” degrees of freedom because the tuning parameter controls its roughness. But since the smoothing splines parameters are thus “heavily constrained or shrunk down”, we talk about effective degrees of freedom, instead of just degrees of freedom.
+
+```{r}
+#Let’s try a global non-linear smoothed regression
+#we choose how many degrees of freedom
+#let’s use 6 degrees of freedom to see how it compares to the 6 degrees in our global linear model (3 knots = 6 degrees)
+globalNonlinear <- smooth.spline(anespi16$fttrump, anespi16$birthyr, df=6)
+coef(globalNonlinear)
+#Returns NULL result…
+#Let’s check what our regression contains
+ls(globalNonlinear)
+globalNonlinear$fit
+#We do not know how to interpret the results of this kind of regression
+#Checking sum of squared residuals for fit of line
+sum(residuals(globalNonlinear)^2)
+```
+
+Local non-linear smoothed (loess)
+
+The next three regressions processed are local non-linear smoothed regressions. The local and smooth parts of this regression mean that our results should maintain continuity, while also reflecting any changing relationship between age and Trump support over time. The loess function on R allows us to choose the “span” of the regression, which lets us control where the data is split into sections. After being split, a separate formula is applied to each section of the data, presumably increasing the accuracy and fit of the results. 
+
+Because increasing or decreasing the size of sections of data analysis affects the trade-off between smoothness/continuity and accuracy/fit of our results, we plan to run the loess regression three separate times with different span sizes. We have chosen spans of .2, .5, and .1. A span of .2 means that the data will be divided into 20% chunks, making 5 sections of data. We chose this span to start based on the examples/lab of our textbook. We then chose a larger span of .5, increasing the overall continuity of the results, using only 2 sections of data containing 50% of the data in each. Lastly, we chose a span of .1, dividing the data into 10% chunks, or 10 sections total, to see if the fit would improve. 
+
+Just as when we discussed smoothness and discontinuity, there is a tradeoff in how loess is processed As we increase the span, making more sections of data to be analyzed separately, we can assume that our results will have a better fit and more perfectly reflect the reality of the data at hand. However, this makes our results more discotinuous, meaning that it is more difficult or even impossible to describe the overall trends happening in the data. Decreasing the span means that overall trends are produced more readily, but that they may not be a very accurate reflection of the data.
+
+```{r}
+#Now let’s move to local non-linear smoothed regression, to see how a local regression can alter our results
+#span = .2 = data is split into 20% intervals = 5 sections
+localNonlinear1 <- loess(fttrump~birthyr, span = .2, data=anespi16, subset=fttrump<=100)
+coef(localNonlinear1) 
+#Returns NULL result….
+#Let’s check what our regression contains
+ls(localNonlinear1)
+#We do not know how to interpret the results of this kind of regression
+#Checking sum of squared residuals for fit of line
+sum(localNonlinear1$residual^2)
+#span = .5 = data is split into 50% intervals = 2 sections
+localNonlinear2 <- loess(fttrump~birthyr, span=.5, data=anespi16, subset=fttrump<=100) 
+coef(localNonlinear2)
+#Returns NULL result….
+#Let’s check what our regression contains
+ls(localNonlinear2)
+#We do not know how to interpret the results of this kind of regression
+#Checking sum of squared residuals for fit of line
+sum(localNonlinear2$residual^2)
+
+#span = .1 = data is split into 10% intervals = 10 sections
+localNonlinear3 <- loess(fttrump~birthyr, span=.1, data=anespi16, subset=fttrump<=100) 
+coef(localNonlinear3)
+#Returns NULL result….
+#Let’s check what our regression contains
+ls(localNonlinear3)
+#We do not know how to interpret the results of this kind of regression
+#Checking sum of squared residuals for fit of line
+sum(localNonlinear3$residual^2)
+```
+Data analysis
+
+We have run six different regressions on the Trump feeling thermometer data, and need to choose one of them to recommend for our friend. In order to choose one, we calculated the sum of squared residuals for each of the regressions run. Here we are following hte logic of sum of least squares, and therefore should choose the regressions that produces the smallest sum of squared residuals, thereby being the best fit of the six regressions. (This of courses doesn’t mean it is the absolute best fit - just the best of those that we chose to run.) The table below displays our results.
+
+#TABLE1#
+Functions              		 | Sum of squared residuals
+---------------------------------------|----------------------------------
+Basic Linear      		 |           1,548,091
+Global Linear         		 |           1,537,260
+Global Non-linear     		 |              332,687.5
+Local Non-linear 1 (20%)	 |           1,528,142
+Local Non-linear 2 (50%)	 |           1,537,976
+Local Non-linear 3 (10%)	 |           1,507,927
+
+You can see from the table above that our global non-linear regression resulted in the smallest sum of squared residuals, and is thus the best fit of the regressions used here. We would therefore like to recommend to our friend that she use global non-linear smoothed regression (smoothing splines) in analyzing the relationship between birth year (age) and support for Trump. 
+
+Probably the main advantage of using smoothing splines is that it finds a function that fits the data “well”. First of all, it avoids the knot selection problem. There’s no need to determine the knots a priori because the function uses a “maximal set of knots”; every unique value of X has a knot. (Hastie, Tibshirani and Friedman, 2008)  Secondly, despite the predictor space being “saturated” with knots (which means every value is taken into account), the function also protects against overfitting by constraining the impact the knots can have on the fitted values. “The initial number of knots does not have to change but the impact of some can be shrunk to zero”. (Berk, 2008) Therefore, the function is able to both minimize RSS and smooth results.
+
+Conclusion (shortcomings, ways for improvement) 
+
+In answering our friend’s question, we chose to suggest global non-linear smoothed regression, of smoothing splnes. However, in the course of this exploration, we had a very difficult time understanding how the results of compelx regressions can be visualized and interpreted. We realize that being unable to analyze the results of our regression is a large drawback to our recommendation, but would like to address this issue in the course of this week’s class.
+
+During our exploration, we came across a few shortcomings that need to be addressed. Looking over the codebook, we believed that the fttrump variable was not an accurate reflection for Trump support. First of all, we wondered why the scale had to be so grand in scale. What was the justification behind such a grand scale and did they accurately depict the people’s preference? In reality, do you think a person of 85 was any less supportive than someone who wrote down 86? How many people wrote down their true feeling? 
+Also, the concept of a ‘feeling thermometer’ may have been differently understood by people depending on their personal understanding of temperature. For example, someone who resides in Illinois may have a different understanding about what consitutes ‘cold’ temperature compared to those from Florida. Therefore, this would also translate differently on the ‘feeling thermometer’. We believed that a better option may have been the primaries or preference between Clinton and Trump.  
+
